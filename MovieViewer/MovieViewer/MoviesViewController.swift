@@ -17,7 +17,9 @@ class MoviesViewController: UIViewController, UITableViewDataSource, UITableView
     var movies: [NSDictionary]?
     
     var refreshControl: UIRefreshControl?;
-    var refreshing = false;
+    //var refreshing = false;
+    
+    var endpoint: String!
     
     
     override func viewDidLoad() {
@@ -33,8 +35,8 @@ class MoviesViewController: UIViewController, UITableViewDataSource, UITableView
         // add refresh control to table view
         tableview.insertSubview(refreshControl, at: 0)
         let apiKey = "a07e22bc18f5cb106bfe4cc1f83ad8ed"
-        let url = URL(string: "https://api.themoviedb.org/3/movie/now_playing?api_key=\(apiKey)")!
-        let request = URLRequest(url: url, cachePolicy: .reloadIgnoringLocalCacheData, timeoutInterval: 10)
+        let url = URL(string: "https://api.themoviedb.org/3/movie/\(self.endpoint)?api_key=\(apiKey)")
+        let request = URLRequest(url: url!)
         let session = URLSession(configuration: .default, delegate: nil, delegateQueue: OperationQueue.main)
         
         MBProgressHUD.showAdded(to: self.view, animated: true)
@@ -68,10 +70,12 @@ class MoviesViewController: UIViewController, UITableViewDataSource, UITableView
         let apiKey = "a07e22bc18f5cb106bfe4cc1f83ad8ed"
         let url = URL(string: "https://api.themoviedb.org/3/movie/now_playing?api_key=\(apiKey)")!
         let request = URLRequest(url: url, cachePolicy: .reloadIgnoringLocalCacheData, timeoutInterval: 10)
-        
-        // Configure session so that completion handler is executed on main UI thread
         let session = URLSession(configuration: .default, delegate: nil, delegateQueue: OperationQueue.main)
+        
+        MBProgressHUD.showAdded(to: self.view, animated: true)
+        
         let task: URLSessionDataTask = session.dataTask(with: request) { (data: Data?, response: URLResponse?, error: Error?) in
+            MBProgressHUD.hide(for: self.view, animated: true)
             if let data = data {
                 if let dataDictionary = try! JSONSerialization.jsonObject(with: data, options: []) as? NSDictionary {
                     print(dataDictionary)
@@ -80,9 +84,7 @@ class MoviesViewController: UIViewController, UITableViewDataSource, UITableView
                     self.tableview.reloadData()
                 }
             }
-            // Tell the refreshControl to stop spinning
-            refreshControl.endRefreshing()
-        }
+        };
         task.resume()
     }
     
@@ -101,32 +103,36 @@ class MoviesViewController: UIViewController, UITableViewDataSource, UITableView
         let movie = movies![indexPath.row]
         let title = movie["title"] as! String
         let overview = movie["overview"] as! String
-        let posterPath = movie["poster_path"] as! String
-        
         let baseUrl = "https://image.tmdb.org/t/p/w500"
         
-        let imageUrl = NSURL(string: baseUrl + posterPath)
-        
+        if let posterPath = movie["poster_path"] as? String{
+            let imageUrl = NSURL(string: baseUrl + posterPath)
+            cell.imagewindow.setImageWith(imageUrl as! URL)
+        }
+       
         cell.titleLabel.text = title
         cell.overviewLabel.text = overview
-        cell.imagewindow.setImageWith(imageUrl as! URL)
-        
-        
-        
+
         //cell.textLabel!.text = title
-        print("row \(indexPath.row)")
+        //print("row \(indexPath.row)")
         return cell
     }
     
-    
-    /*
      // MARK: - Navigation
      
      // In a storyboard-based application, you will often want to do a little preparation before navigation
      override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
+        let cell = sender as! UITableViewCell
+        let indexPath = tableview.indexPath(for: cell)
+        let movie = movies![indexPath!.row]
+        
+        let detailViewController = segue.destination as! DetailViewController
+        detailViewController.movie = movie
+        
+        
+        
      // Get the new view controller using segue.destinationViewController.
      // Pass the selected object to the new view controller.
      }
-     */
     
 }
