@@ -19,7 +19,7 @@ class MoviesViewController: UIViewController, UITableViewDataSource, UITableView
     var refreshControl: UIRefreshControl?;
     //var refreshing = false;
     
-    var endpoint: String!
+    var endpoint: String = "";
     
     
     override func viewDidLoad() {
